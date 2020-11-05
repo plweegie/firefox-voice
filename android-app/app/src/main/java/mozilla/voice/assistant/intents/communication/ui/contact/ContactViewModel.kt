@@ -24,7 +24,7 @@ internal fun List<String>.toPossibleNicknames(): List<String> {
 
 class ContactViewModelFactory(
     private val application: Application,
-    private val mode: String,
+    private val mode: String?,
     private val nickname: String?,
     private val payload: String?
 ) : ViewModelProvider.Factory {

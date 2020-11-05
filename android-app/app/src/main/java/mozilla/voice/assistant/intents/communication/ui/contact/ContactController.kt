@@ -44,7 +44,7 @@ private fun String.numWords() = if (this.isEmpty()) 0 else this.split(" ").size
  */
 class ContactController(
     private val contactActivity: ContactActivityInterface,
-    mode: String,
+    mode: String?,
     nickname: String?,
     payload: String?
 ) {

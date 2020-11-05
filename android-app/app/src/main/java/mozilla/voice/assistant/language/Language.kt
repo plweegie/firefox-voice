@@ -23,6 +23,8 @@ class Language(context: Context) {
     private val aliases: MutableMap<String, MutableList<String>> = mutableMapOf()
     private val multiwordAliases: MutableMap<String, MutableList<List<String>>> =
         mutableMapOf()
+    private val numbers: MutableMap<Int, MutableList<String>> = mutableMapOf()
+
     // These are initialized in addAllStopwords().
     private lateinit var stopwords: List<String>
     private lateinit var stopwordsRegex: Regex
@@ -50,6 +52,7 @@ class Language(context: Context) {
                         when (section) {
                             "aliases" -> addAlias(line)
                             "stopwords" -> stopwordLines.add(line)
+                            "numbers.ordinals", "numbers.plain", "numbers.literals" -> addNumber(line)
                             null -> throw TomlException("Data encountered before section heading")
                             else -> throw TomlException("Unexpected section $section")
                         }
@@ -85,6 +88,17 @@ class Language(context: Context) {
         }
     }
 
+    @VisibleForTesting
+    internal fun addNumber(line: String) {
+        val fields = line.trim().split("=").map { it.trim() }
+        if (fields.size != 2) {
+            throw IllegalArgumentException("Illegal line in [numbers] section: $line")
+        }
+
+        val (alias, proper) = fields
+        numbers.add(proper.toInt(), alias)
+    }
+
     internal fun stripStopwords(s: String) =
         s.replace(stopwordsRegex, "")
             .replace(spacesRegex, " ")
@@ -99,6 +113,9 @@ class Language(context: Context) {
 
     @VisibleForTesting // exists for testing
     internal fun getMultiwordAliasesSize() = multiwordAliases.size
+
+    @VisibleForTesting
+    internal fun getNumbersSize() = numbers.size
 
     @VisibleForTesting // exists for testing
     internal fun getStopwordsSize() = stopwords.size
