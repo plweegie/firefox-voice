@@ -40,7 +40,7 @@ class Maps {
             pr: ParseResult,
             @Suppress("UNUSED_PARAMETER") context: Context?,
             @Suppress("UNUSED_PARAMETER") metadata: Metadata
-        ): android.content.Intent? =
+        ): Intent? =
             pr.slots[LOCATION_KEY]?.let {
                 Intent(
                     Intent.ACTION_VIEW,
@@ -52,7 +52,7 @@ class Maps {
             pr: ParseResult,
             @Suppress("UNUSED_PARAMETER") context: Context?,
             @Suppress("UNUSED_PARAMETER") metadata: Metadata
-        ): android.content.Intent? =
+        ): Intent? =
             pr.slots[THING_KEY]?.let { thing ->
                 val suffix = pr.slots[LOCATION_KEY]?.let { " in $it" } ?: ""
                 Intent(

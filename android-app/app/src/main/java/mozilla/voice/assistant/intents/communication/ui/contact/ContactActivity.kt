@@ -16,8 +16,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.contact_activity.*
 import mozilla.voice.assistant.R
+import mozilla.voice.assistant.databinding.ContactActivityBinding
 import mozilla.voice.assistant.intents.communication.MODE_KEY
 import mozilla.voice.assistant.intents.communication.NICKNAME_KEY
 import mozilla.voice.assistant.intents.communication.PAYLOAD_KEY
@@ -36,9 +36,12 @@ class ContactActivity : AppCompatActivity(), ContactActivityInterface {
     override val app: Application
         get() = this.application
 
+    private lateinit var binding: ContactActivityBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.contact_activity)
+        binding = ContactActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
     }
 
     override fun onStart() {
@@ -50,7 +53,7 @@ class ContactActivity : AppCompatActivity(), ContactActivityInterface {
             intent.getStringExtra(NICKNAME_KEY),
             intent.getStringExtra(PAYLOAD_KEY)
         )
-        contactCloseButton.setOnClickListener {
+        binding.contactCloseButton.setOnClickListener {
             finish()
         }
     }
@@ -91,15 +94,15 @@ class ContactActivity : AppCompatActivity(), ContactActivityInterface {
     }
 
     override fun processZeroContacts(cursor: Cursor, nickname: String?) {
-        contactsCheckBox.visibility = if (nickname == null) View.INVISIBLE else View.VISIBLE
+        binding.contactsCheckBox.visibility = if (nickname == null) View.INVISIBLE else View.VISIBLE
 
-        contactStatusView.text = if (nickname == null) {
+        binding.contactStatusView.text = if (nickname == null) {
             getString(R.string.no_contacts)
         } else {
             getString(R.string.no_contacts_with_nickname, nickname)
         }
-        contactsViewAnimator.showNext()
-        noContactsButton.setOnClickListener {
+        binding.contactsViewAnimator.showNext()
+        binding.noContactsButton.setOnClickListener {
             cursor.close()
             startContactPicker()
         }
@@ -115,8 +118,8 @@ class ContactActivity : AppCompatActivity(), ContactActivityInterface {
     }
 
     override fun processMultipleContacts(cursor: Cursor, nickname: String?) {
-        contactsCheckBox.visibility = if (nickname == null) View.INVISIBLE else View.VISIBLE
-        contactStatusView.text = if (nickname == null) {
+        binding.contactsCheckBox.visibility = if (nickname == null) View.INVISIBLE else View.VISIBLE
+        binding.contactStatusView.text = if (nickname == null) {
             getString(R.string.multiple_contacts)
         } else {
             getString(R.string.multiple_contacts_with_nickname, nickname)
@@ -139,7 +142,7 @@ class ContactActivity : AppCompatActivity(), ContactActivityInterface {
                 data?.data?.let {
                     controller.onContactChosen(
                         it,
-                        contactsCheckBox.visibility == View.VISIBLE && contactsCheckBox.isChecked
+                        binding.contactsCheckBox.visibility == View.VISIBLE && binding.contactsCheckBox.isChecked
                     )
                 } ?: run {
                     Log.e(TAG, "Unable to retrieve chosen contact")

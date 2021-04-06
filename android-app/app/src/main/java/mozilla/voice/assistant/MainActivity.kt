@@ -25,9 +25,9 @@ import androidx.core.text.bold
 import androidx.core.text.italic
 import androidx.core.text.scale
 import com.airbnb.lottie.LottieDrawable
+import mozilla.voice.assistant.databinding.ActivityMainBinding
 import java.util.Timer
 import kotlin.concurrent.schedule
-import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.voice.assistant.intents.IntentRunner
 import mozilla.voice.assistant.intents.Metadata
 import mozilla.voice.assistant.intents.alarm.Alarm
@@ -66,12 +66,15 @@ class MainActivity : AppCompatActivity() {
     private var intentStatus: String? = null
     private var intentSuggestion: String? = null
 
+    private lateinit var binding: ActivityMainBinding
+
     // showReady() uses shownBurst to ensure the initial "burst" animation is shown only once
     private var shownBurst = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         initializeData()
     }
 
@@ -101,24 +104,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setStatusText(s: String) {
-        statusView.text = s
+        binding.statusView.text = s
     }
 
     private fun updateViews() {
-        feedbackView.text = ""
+        binding.feedbackView.text = ""
         setStatusText(intentStatus ?: getString(R.string.initializing))
+
         intentSuggestion?.let { suggestion ->
-            suggestionButton.text = suggestion
-            suggestionButton.visibility = View.VISIBLE
-                suggestionButton.setOnClickListener { _ ->
-                    run {
-                        closeRecognizer()
-                        handleResults(listOf(suggestion))
-                    }
+            binding.suggestionButton.apply {
+                text = suggestion
+                visibility = View.VISIBLE
+                setOnClickListener {
+                    closeRecognizer()
+                    handleResults(listOf(suggestion))
                 }
+            }
         } ?: run {
-            suggestionButton.visibility = View.INVISIBLE
-            suggestionButton.setOnClickListener(null)
+            binding.suggestionButton.apply {
+                visibility = View.INVISIBLE
+                setOnClickListener(null)
+            }
         }
     }
 
@@ -219,48 +225,56 @@ class MainActivity : AppCompatActivity() {
 
     private fun showReady() {
         if (shownBurst) {
-            animationView.setMinAndMaxFrame(SOUND_MIN, SOUND_MAX)
+            binding.animationView.setMinAndMaxFrame(SOUND_MIN, SOUND_MAX)
         } else {
-            animationView.setMinAndMaxFrame(SOLICIT_MIN, SOUND_MAX)
+            binding.animationView.setMinAndMaxFrame(SOLICIT_MIN, SOUND_MAX)
             shownBurst = true
-            animationView.repeatCount = 1
-            animationView.addAnimatorUpdateListener { valueAnimator ->
-                @SuppressWarnings("MagicNumber")
-                if (valueAnimator.animatedFraction > .99) { // close enough to 1
-                    animationView.setMinFrame(SOUND_MIN)
-                    animationView.removeAllUpdateListeners()
-                    animationView.repeatCount = LottieDrawable.INFINITE
+
+            binding.animationView.apply {
+                repeatCount = 1
+                addAnimatorUpdateListener { valueAnimator ->
+
+                    @SuppressWarnings("MagicNumber")
+                    if (valueAnimator.animatedFraction > .99) { // close enough to 1
+                        setMinFrame(SOUND_MIN)
+                        removeAllUpdateListeners()
+                        repeatCount = LottieDrawable.INFINITE
+                    }
                 }
             }
         }
-        animationView.playAnimation()
+
+        binding.animationView.playAnimation()
         setStatusText(intentStatus ?: getString(R.string.listening))
     }
 
     private fun showListening() {
-        animationView.pauseAnimation()
-        animationView.setMinAndMaxFrame(SOUND_MIN, SOUND_MAX)
-        animationView.resumeAnimation()
-        animationView.removeAllUpdateListeners()
-        animationView.repeatCount = LottieDrawable.INFINITE
+        binding.animationView.apply {
+            pauseAnimation()
+            setMinAndMaxFrame(SOUND_MIN, SOUND_MAX)
+            resumeAnimation()
+            removeAllUpdateListeners()
+            repeatCount = LottieDrawable.INFINITE
+        }
+
         setStatusText(getString(R.string.listening))
     }
 
     private fun showProcessing() {
-        animationView.setMinAndMaxFrame(PROCESSING_MIN, PROCESSING_MAX)
+        binding.animationView.setMinAndMaxFrame(PROCESSING_MIN, PROCESSING_MAX)
         setStatusText(getString(R.string.processing))
     }
 
     private fun showSuccess() {
-        animationView.setMinAndMaxFrame(SUCCESS_MIN, SUCCESS_MAX)
-        animationView.repeatCount = 0
+        binding.animationView.setMinAndMaxFrame(SUCCESS_MIN, SUCCESS_MAX)
+        binding.animationView.repeatCount = 0
         setStatusText(getString(R.string.got_it))
     }
 
     private fun displayError(errorText: String) {
-        animationView.setMinAndMaxFrame(ERROR_MIN, ERROR_MAX)
+        binding.animationView.setMinAndMaxFrame(ERROR_MIN, ERROR_MAX)
         setStatusText(errorText)
-        feedbackView.text = errorText
+        binding.feedbackView.text = errorText
     }
 
     private fun getSuggestionPrefix() =
@@ -279,7 +293,7 @@ class MainActivity : AppCompatActivity() {
             )
 
     private fun giveSuggestions() {
-        feedbackView.text =
+        binding.feedbackView.text =
             SpannableStringBuilder()
                 .scale(SUGGESTIONS_SCALE) {
                     italic { append(getSuggestionPrefix()) }
@@ -333,7 +347,7 @@ class MainActivity : AppCompatActivity() {
 
         @SuppressWarnings("ComplexMethod")
         override fun onError(error: Int) {
-            animationView.pauseAnimation()
+            binding.animationView.pauseAnimation()
             val errorText = when (error) {
                 SpeechRecognizer.ERROR_AUDIO -> "Audio error"
                 SpeechRecognizer.ERROR_CLIENT -> "Client error"
@@ -376,7 +390,7 @@ class MainActivity : AppCompatActivity() {
                     handleResults(it)
                 }
             } else {
-                feedbackView.text = getString(R.string.no_match)
+                binding.feedbackView.text = getString(R.string.no_match)
             }
         }
     }
@@ -390,21 +404,21 @@ class MainActivity : AppCompatActivity() {
                     intentStatus = null
                     intentSuggestion = null
                     // Pause briefly before launching the intent to show the winning transcription.
-                    feedbackView.text = it.first
+                    binding.feedbackView.text = it.first
                     Handler(Looper.getMainLooper()).postDelayed(
                         { startActivity(it.second) },
                         TRANSCRIPT_DISPLAY_TIME
                     )
                 }
             } else {
-                feedbackView.text = getString(R.string.no_match)
+                binding.feedbackView.text = getString(R.string.no_match)
             }
         }
     }
 
     override fun onPause() {
         super.onPause()
-        animationView.pauseAnimation()
+        binding.animationView.pauseAnimation()
         closeRecognizer()
     }
 
